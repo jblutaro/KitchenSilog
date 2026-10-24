@@ -1,0 +1,20 @@
+:root {
+  --color-cream: #f5e6c8;
+  --color-peach: #f2a96e;
+  --color-brown: #7b4a1e;
+  --color-dark: #2b1a0e;
+  --color-paper: #fff5d9;
+  --color-toast: #d8b880;
+  --color-tile: #e8cea0;
+  --color-wood: #ae7746;
+  --color-red: #ad4933;
+  --color-green: #587044;
+  --color-gold: #f8cc4b;
+  --color-sky: #aebead;
+  --color-pan: #493b30;
+  --color-pan-edge: #8c7961;
+  --color-shade: #2b1a0e38;
+  --color-modal: #2b1a0ebb;
+  --font-body: "VT323", "Courier New", monospace;
+  --font-display: var(--font-body);
+}

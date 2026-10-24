@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 54 90" shape-rendering="crispEdges" width="54" height="90">
+  <!-- Shadow/base -->
+  <rect x="4" y="84" width="46" height="4" fill="#A0927A" opacity="0.5"/>
+  <!-- Outer body -->
+  <rect x="2" y="2" width="50" height="80" fill="#C8C0B0"/>
+  <!-- Top freezer door -->
+  <rect x="4" y="4" width="46" height="34" fill="#D8D0C0" rx="1"/>
+  <rect x="6" y="6" width="42" height="30" fill="#E8E0D0"/>
+  <!-- Top door border -->
+  <rect x="4" y="4" width="46" height="2" fill="#2B1A0E"/>
+  <rect x="4" y="36" width="46" height="2" fill="#2B1A0E"/>
+  <rect x="4" y="4" width="2" height="34" fill="#2B1A0E"/>
+  <rect x="48" y="4" width="2" height="34" fill="#2B1A0E"/>
+  <!-- Freezer handle -->
+  <rect x="40" y="14" width="4" height="14" fill="#888880"/>
+  <rect x="41" y="15" width="2" height="12" fill="#555550"/>
+  <!-- Gap between doors -->
+  <rect x="2" y="38" width="50" height="4" fill="#1A0E06"/>
+  <!-- Bottom fridge door -->
+  <rect x="4" y="42" width="46" height="36" fill="#D8D0C0" rx="1"/>
+  <rect x="6" y="44" width="42" height="32" fill="#E8E0D0"/>
+  <!-- Bottom door border -->
+  <rect x="4" y="42" width="46" height="2" fill="#2B1A0E"/>
+  <rect x="4" y="76" width="46" height="2" fill="#2B1A0E"/>
+  <rect x="4" y="42" width="2" height="36" fill="#2B1A0E"/>
+  <rect x="48" y="42" width="2" height="36" fill="#2B1A0E"/>
+  <!-- Fridge handle -->
+  <rect x="40" y="54" width="4" height="18" fill="#888880"/>
+  <rect x="41" y="55" width="2" height="16" fill="#555550"/>
+  <!-- Outer border/frame -->
+  <rect x="0" y="0" width="54" height="2" fill="#2B1A0E"/>
+  <rect x="0" y="80" width="54" height="2" fill="#2B1A0E"/>
+  <rect x="0" y="0" width="2" height="82" fill="#2B1A0E"/>
+  <rect x="52" y="0" width="2" height="82" fill="#2B1A0E"/>
+  <!-- Feet -->
+  <rect x="4" y="80" width="8" height="4" fill="#888880"/>
+  <rect x="42" y="80" width="8" height="4" fill="#888880"/>
+  <!-- Top white freezer panel -->
+  <rect x="6" y="0" width="42" height="6" fill="#F5EEE0"/>
+  <rect x="4" y="2" width="46" height="4" fill="#F0E8D8"/>
+</svg>

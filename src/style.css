@@ -1,1296 +1,741 @@
-/* Hallmark · pre-emit critique: P5 H4 E4 S5 R4 V5
-   Playful kitchen workbench · custom warm palette · pixel silhouettes. */
-@import "./tokens.css";
-* {
-  box-sizing: border-box;
-}
-html,
+/* ── Reset & Base ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  margin: 0;
-  overflow-x: clip;
+  background: #2B1A0E;
+  font-family: 'Courier New', Courier, monospace;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-body {
-  background: var(--color-dark);
-  color: var(--color-dark);
-  font-family: var(--font-body);
-  font-size: clamp(18px, 1.5vw, 22px);
-  padding: clamp(8px, 3vw, 40px);
-  min-height: 100svh;
-}
-button {
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  border: 2px solid var(--color-dark);
-  background: var(--color-cream);
-  min-height: 44px;
-  padding: 8px 14px;
-  white-space: nowrap;
-  box-shadow: 3px 3px 0 var(--color-dark);
-}
-button:hover {
-  background: var(--color-peach);
-}
-button:active {
-  translate: 1px 2px;
-  box-shadow: 1px 1px 0 var(--color-dark);
-}
-button:focus-visible {
-  outline: 3px solid var(--color-red);
-  outline-offset: 4px;
-}
-button:disabled {
-  cursor: default;
-}
-button[hidden],
-[hidden] {
-  display: none !important;
-}
-h1,
-h2,
-h3,
-p {
-  margin: 0;
-}
-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  image-rendering: pixelated;
-}
-kbd {
-  font: inherit;
-  border: 1px solid currentColor;
-  padding: 0 4px;
-  opacity: 0.75;
-}
+
+svg, img { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* ── Game Wrapper ─────────────────────────────────────────────────── */
 #game-wrapper {
-  max-width: 1280px;
-  margin: auto;
-  background: var(--color-cream);
-  border: 4px solid var(--color-brown);
-  box-shadow: 8px 8px 0 var(--color-shade);
+  display: flex;
+  flex-direction: row;
+  width: 100vw;
+  height: 100vh;
+  max-width: 1100px;
+  gap: 0;
   position: relative;
 }
-#game-wrapper::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 8;
-  background: repeating-linear-gradient(
-    0deg,
-    var(--color-shade) 0 1px,
-    transparent 1px 4px
-  );
-  opacity: 0.12;
-  box-shadow: inset 0 0 70px var(--color-dark);
-}
-.masthead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: clamp(12px, 2.4vw, 28px);
-  border-bottom: 3px solid var(--color-brown);
-}
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-.brand-icon {
-  width: 64px;
-  height: 64px;
-  background: var(--color-peach);
-  border: 2px solid var(--color-brown);
-  flex-shrink: 0;
-}
-.brand h1 {
-  font-size: clamp(24px, 4.1vw, 52px);
-  line-height: 0.95;
-  font-weight: 400;
-  letter-spacing: 1px;
-}
-.brand p {
-  font-size: clamp(10px, 1.3vw, 16px);
-  letter-spacing: 1.4px;
-  margin-top: 8px;
-}
-.till {
-  display: grid;
-  grid-template-columns: 32px auto;
-  align-items: center;
-  gap: 0 8px;
-  font-size: clamp(23px, 3vw, 38px);
-  color: var(--color-brown);
-}
-.till svg {
-  height: 32px;
-}
-.till small {
-  grid-column: 2;
-  font-size: 12px;
-  letter-spacing: 2px;
-}
-.game-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 8px 20px;
-  background: var(--color-brown);
-  color: var(--color-cream);
-  font-size: 16px;
-}
-.game-toolbar > span:first-child {
-  margin-right: auto;
-}
-.game-toolbar button {
-  color: var(--color-cream);
-  border: 0;
-  box-shadow: none;
-  background: transparent;
-  padding: 0;
-  min-height: 36px;
-}
-.open-light {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background: var(--color-gold);
-  margin-right: 5px;
-}
-.game-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 290px;
-}
+
+/* ── Kitchen Scene ────────────────────────────────────────────────── */
 #kitchen-scene {
   position: relative;
-  isolation: isolate;
-  aspect-ratio: 4/3;
-  min-width: 0;
-  overflow: hidden;
-  background: var(--color-toast);
-  container-type: inline-size;
-}
-.wall {
-  position: absolute;
-  inset: 0 0 34%;
-  background: var(--color-peach);
-  border-bottom: 8px solid var(--color-brown);
-}
-.wall:after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent 0 39px,
-    var(--color-shade) 39px 40px
-  );
-  opacity: 0.25;
-}
-.floor {
-  position: absolute;
-  inset: 65% 0 0;
-  background: conic-gradient(
-      var(--color-toast) 25%,
-      var(--color-cream) 0 50%,
-      var(--color-toast) 0 75%,
-      var(--color-cream) 0
-    )
-    0 0/56px 56px;
-  transform: perspective(200px) rotateX(18deg) scale(1.2);
-  transform-origin: bottom;
-}
-.backsplash {
-  position: absolute;
-  inset: 36% 0 36%;
-  background:
-    linear-gradient(var(--color-brown) 2px, transparent 2px),
-    linear-gradient(90deg, var(--color-brown) 2px, var(--color-cream) 2px);
-  background-size: 32px 28px;
-  border-block: 4px solid var(--color-brown);
-  opacity: 0.65;
-}
-.window {
-  position: absolute;
-  left: 8%;
-  top: 7%;
-  width: 28%;
-  height: 27%;
-  background: var(--color-sky);
-  border: 6px solid var(--color-brown);
-  box-shadow: 4px 4px 0 var(--color-shade);
-  overflow: hidden;
-}
-.window:after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 47%,
-      var(--color-brown) 47% 53%,
-      transparent 53%
-    ),
-    linear-gradient(
-      transparent 48%,
-      var(--color-brown) 48% 54%,
-      transparent 54%
-    );
-}
-.sun {
-  position: absolute;
-  left: 17%;
-  top: 12%;
-  width: 23%;
-  aspect-ratio: 1;
-  background: var(--color-gold);
-  box-shadow: 3px 3px 0 var(--color-toast);
-}
-.cloud {
-  position: absolute;
-  right: 8%;
-  top: 25%;
-  width: 34%;
-  height: 14%;
-  background: var(--color-paper);
-  box-shadow: -8px 5px 0 var(--color-paper);
-}
-.hills {
-  position: absolute;
-  inset: 65% -10% -20%;
-  background: var(--color-green);
-  transform: rotate(-12deg);
-  box-shadow: 40px -9px 0 var(--color-wood);
-}
-.wall-sign {
-  position: absolute;
-  left: 43%;
-  top: 8%;
-  text-align: center;
-  font-size: clamp(24px, 4cqw, 44px);
-  color: var(--color-brown);
-  transform: rotate(-3deg);
-}
-.wall-sign small {
-  display: block;
-  font-size: clamp(11px, 1.8cqw, 18px);
-}
-.shelf {
-  position: absolute;
-  right: 7%;
-  top: 29%;
-  width: 25%;
-  height: 5%;
-  border-bottom: 6px solid var(--color-brown);
+  flex: 0 0 640px;
+  height: 100%;
   display: flex;
   align-items: flex-end;
-  justify-content: space-around;
+  overflow: hidden;
+  /* Pixel-art CSS fallback until kitchen.png is placed in /public */
+  background:
+    /* floor diamonds */
+    repeating-conic-gradient(#C8823A 0% 25%, #F2A96E 0% 50%) 0 0 / 32px 32px,
+    /* wall */
+    linear-gradient(180deg, #F2A96E 0%, #F2A96E 60%, #C8823A 60%);
 }
-.shelf i {
-  width: 16%;
-  height: 150%;
-  background: var(--color-paper);
-  border: 3px solid var(--color-brown);
-  border-top-width: 6px;
-}
-.shelf i:nth-child(2) {
-  background: var(--color-red);
-  height: 120%;
-}
-.shelf span {
-  color: var(--color-green);
-  font-size: 42px;
-  line-height: 1;
-}
-.stove {
+
+#kitchen-bg {
   position: absolute;
-  left: 4%;
-  top: 45%;
-  width: 45%;
-  height: 38%;
-  background: var(--color-wood);
-  border: 4px solid var(--color-dark);
-  box-shadow: 5px 6px 0 var(--color-shade);
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
 }
-.station-title {
+
+/* Fallback if kitchen.png not yet placed in /public */
+#kitchen-bg[src=""] , #kitchen-bg:not([src]) {
+  display: none;
+}
+
+/* ── Hotspots (old generic class — kept for fallback) ─────────────── */
+.hotspot {
   position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
-  background: var(--color-cream);
-  padding: 3px 6px;
-  border: 2px solid var(--color-brown);
-  font-size: clamp(9px, 1.65cqw, 16px);
+  cursor: pointer;
+  border: 2px dashed rgba(255,255,255,0.2);
+  border-radius: 4px;
+  background: rgba(43, 26, 14, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px;
+  gap: 3px;
+  transition: background 0.15s, border-color 0.15s;
+  z-index: 10;
+}
+.hotspot:hover {
+  background: rgba(43, 26, 14, 0.38);
+  border-color: rgba(255,200,100,0.7);
+}
+.hotspot-label {
+  font-size: 9px;
+  font-weight: bold;
+  color: #FFF8EE;
+  text-shadow: 1px 1px 0 #2B1A0E;
   white-space: nowrap;
 }
-.burners {
+
+/* ── Sprite Wrappers — placed exactly over background ────────────── */
+/*
+  Background image is square (1024×1024px reference).
+  Kitchen scene panel is fixed at 640px wide, full viewport height.
+  We use % of the scene width & height to stay responsive.
+
+  From inspecting the background art:
+    Stove:   left 2%,  top 30%,  width 25%, height 50%
+    Counter: left 27%, top 37%,  width 46%, height 38%
+    Fridge:  left 73%, top 26%,  width 24%, height 55%
+*/
+
+.sprite-wrap {
   position: absolute;
-  inset: 0 0 37%;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  background: var(--color-toast);
-  gap: 3px;
-  padding: 5px;
+  z-index: 5;
+  image-rendering: pixelated;
+  /* cursor set per-sprite via ID — default pointer only where clickable */
 }
+
+.kitchen-sprite {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  display: block;
+  pointer-events: none; /* clicks always fall through to wrapper or children */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  transition: filter 0.15s;
+}
+
+/* Only fridge wrapper gets cursor:pointer — stove/counter use child zones */
+#sprite-fridge { cursor: pointer; }
+#sprite-stove  { cursor: default; }
+#sprite-counter { cursor: default; }
+
+#sprite-fridge:hover .kitchen-sprite {
+  filter: drop-shadow(0 0 6px rgba(255,200,80,0.7)) brightness(1.08);
+}
+
+/* STOVE — left column */
+#sprite-stove {
+  left: 2%;
+  top: 30%;
+  width: 25%;
+  height: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* COUNTER — center */
+#sprite-counter {
+  left: 27%;
+  top: 37%;
+  width: 46%;
+  height: 38%;
+  cursor: default; /* sub-zones handle clicks */
+}
+
+/* FRIDGE — right */
+#sprite-fridge {
+  left: 73%;
+  top: 26%;
+  width: 24%;
+  height: 55%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* ── Stove Burner Zones (overlaid on stove sprite) ───────────────── */
+/*
+  Stove SVG viewBox: 0 0 80 100
+  Top-left  burner: x=10,y=20 w=24,h=18  → left=12.5%  top=20%  w=30%  h=18%
+  Top-right burner: x=46,y=20 w=24,h=18  → left=57.5%  top=20%  w=30%  h=18%
+  Bot-left  burner: x=10,y=42 w=24,h=18  → left=12.5%  top=42%  w=30%  h=18%
+  Bot-right burner: x=46,y=42 w=24,h=18  → left=57.5%  top=42%  w=30%  h=18%
+  Egg  → top-left square
+  Meat → top-right square
+  Rice → both bottom squares combined
+*/
 .burner-zone {
-  position: relative;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  cursor: pointer;
+  border-radius: 2px;
+  background: transparent;
+  transition: background 0.15s, outline 0.15s;
+  z-index: 15;
+  padding: 2px;
+  overflow: visible;
+}
+
+.burner-zone:hover {
+  background: rgba(255, 140, 0, 0.28);
+  outline: 2px solid rgba(255, 200, 60, 0.75);
+}
+
+/* Egg — top-left burner square */
+#burner-egg {
+  left:   12.5%;
+  top:    20%;
+  width:  30%;
+  height: 18%;
+}
+
+/* Meat — top-right burner square */
+#burner-meat {
+  left:   57.5%;
+  top:    20%;
+  width:  30%;
+  height: 18%;
+}
+
+/* Rice — both bottom burner squares combined */
+#burner-rice {
+  left:   12.5%;
+  top:    42%;
+  width:  75%;   /* spans left=10 to right=70 → 60/80 = 75% */
+  height: 18%;
+}
+
+/* ── Plate Sprite on Counter ──────────────────────────────────────── */
+/*
+  Counter sprite top surface occupies roughly top 0%–50% of the sprite.
+  Cutting board area is left ~5%–35% of counter width.
+  We place the plate ON the counter top — sitting at top: 2%, not buried inside.
+*/
+#plate-scene {
+  position: absolute;
+  left: 4%;
+  top: 2%;          /* sits ON the counter top surface */
+  width: 38%;
+  height: 52%;      /* spans the upper/countertop half of sprite */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  box-shadow: none;
-  background: transparent;
-  border: 0;
-  min-width: 0;
-  min-height: 0;
-  padding: 0;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  contain: layout;
+  pointer-events: none;
+  z-index: 20;
+  gap: 0;
 }
-.burner-zone:hover {
-  background: var(--color-shade);
-}
-.pan {
-  position: absolute;
-  left: 5%;
-  top: 17%;
-  width: 90%;
-  height: 42%;
-  background: var(--color-pan);
-  border: 4px solid var(--color-dark);
-  box-shadow: inset 0 3px 0 var(--color-pan-edge);
-  clip-path: polygon(
-    15% 0,
-    85% 0,
-    85% 10%,
-    100% 10%,
-    100% 80%,
-    85% 80%,
-    85% 100%,
-    15% 100%,
-    15% 80%,
-    0 80%,
-    0 10%,
-    15% 10%
-  );
-}
-.burner-food {
-  position: absolute;
-  width: 90%;
-  height: 68%;
-  left: 5%;
-  top: -8%;
-  z-index: 2;
-  contain: layout paint;
-}
-.burner-title {
-  font-size: clamp(11px, 1.8cqw, 18px);
-  line-height: 1.1;
-  z-index: 3;
-}
-.food-status {
-  font-size: clamp(9px, 1.45cqw, 14px);
-  line-height: 1.3;
-  white-space: nowrap;
-}
-.cook-track {
-  height: 5px;
-  background: var(--color-dark);
-  width: 85%;
-  margin: 3px 0;
-  overflow: hidden;
-}
-.cook-track > span {
-  display: block;
+
+/* The actual plate sprite image */
+#plate-sprite-img {
   width: 100%;
-  height: 100%;
-  background: var(--color-red);
-  transform: scaleX(0);
-  transform-origin: left;
-  will-change: transform;
-  contain: layout paint;
+  image-rendering: pixelated;
+  display: block;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
 }
-.burner-zone[data-state="cooked"] .cook-track > span {
-  background: var(--color-green);
-}
-.burner-zone[data-state="cooked"] .food-status {
-  color: var(--color-green);
-}
-.burner-zone[data-state="burnt"] .food-status {
-  color: var(--color-red);
-}
-.burner-zone[data-state="cooked"] {
-  cursor: grab;
-}
-.stove-front {
-  position: absolute;
-  inset: 66% 0 0;
-  border-top: 4px solid var(--color-dark);
-  background: var(--color-wood);
-  display: flex;
-  justify-content: space-around;
-  padding: 6px;
-}
-.stove-front > i {
-  width: 12%;
-  height: 12px;
-  background: var(--color-dark);
-  border: 2px solid var(--color-brown);
-}
-.oven {
-  position: absolute;
-  inset: 40% 10% 7%;
-  background: var(--color-pan);
-  border: 3px solid var(--color-dark);
-  box-shadow: inset 0 3px 0 var(--color-toast);
-}
-.counter {
-  position: absolute;
-  left: 52%;
-  top: 50%;
-  width: 27%;
-  height: 33%;
-  background: var(--color-wood);
-  border: 4px solid var(--color-dark);
-  box-shadow: 5px 6px 0 var(--color-shade);
-}
-.counter:before {
-  content: "";
-  position: absolute;
-  inset: -5px -7px 35%;
-  background: var(--color-toast);
-  border: 4px solid var(--color-dark);
-}
-.counter .station-title {
-  font-size: clamp(7px, 1.17cqw, 12px);
-  bottom: calc(100% + 9px);
-  left: -5px;
-}
+
+/* Plate must accept pointer events for drag-drop */
 #plate-scene {
-  position: absolute;
-  left: 4%;
-  top: -15%;
-  width: 92%;
-  height: 80%;
-  z-index: 3;
-  outline-offset: 3px;
+  pointer-events: auto !important;
 }
-.plate-art {
-  position: absolute;
-  inset: 0;
+
+/* Plate drop zone states */
+#plate-scene.drop-target-active {
+  outline: 3px dashed #F5C842;
+  outline-offset: 2px;
+  border-radius: 4px;
+  animation: plateGlow 0.6s infinite alternate;
 }
+
+#plate-scene.drop-hover {
+  outline: 3px solid #5A8A3C;
+  outline-offset: 2px;
+  filter: brightness(1.1);
+}
+
+@keyframes plateGlow {
+  from { outline-color: #F5C842; }
+  to   { outline-color: #FF8800; }
+}
+
+/* Draggable food items */
+.burner-food[draggable="true"] {
+  cursor: grab !important;
+  border-radius: 3px;
+  transition: transform 0.1s, filter 0.1s;
+}
+
+.burner-food[draggable="true"]:hover {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 5px #F5C842);
+}
+
+.burner-food.dragging {
+  opacity: 0.5;
+  cursor: grabbing !important;
+}
+/* Food items stacked on top of the plate */
 #plate-food-stack {
   position: absolute;
-  inset: 5% 5% 8%;
+  bottom: 30%;    /* sits inside the plate well */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  z-index: 3;
   pointer-events: none;
 }
-#plate-food-stack > span {
-  position: absolute;
-  width: 58%;
-  height: 75%;
-  top: 3%;
-  left: 0;
-}
-#plate-food-stack > span:nth-child(2) {
-  left: 40%;
-  top: 13%;
-}
-#plate-food-stack > span:nth-child(3) {
-  left: 22%;
-  top: 34%;
-}
-.plate-caption {
-  position: absolute;
-  top: 57%;
-  width: 100%;
-  text-align: center;
-  font-size: clamp(7px, 1.25cqw, 12px);
-  z-index: 4;
-}
-.cabinet {
-  position: absolute;
-  inset: 70% 5% 3%;
-  display: flex;
-  gap: 5px;
-}
-.cabinet i {
-  flex: 1;
-  border: 2px solid var(--color-brown);
-  position: relative;
-}
-.cabinet i:after {
-  content: "";
-  position: absolute;
-  width: 5px;
-  height: 10px;
-  right: 5px;
-  top: 5px;
-  background: var(--color-dark);
-}
-.fridge {
-  position: absolute;
-  right: 3%;
-  top: 38%;
-  width: 15%;
-  height: 45%;
-  background: var(--color-cream);
-  border: 4px solid var(--color-dark);
-  box-shadow:
-    5px 6px 0 var(--color-shade),
-    inset -7px 0 0 var(--color-toast);
-  padding: 0;
-}
-.fridge-note {
-  position: absolute;
-  top: 9%;
-  left: 15%;
-  font-size: clamp(11px, 1.8cqw, 18px);
-  background: var(--color-peach);
-  padding: 4px;
-  transform: rotate(5deg);
-  border: 1px solid var(--color-brown);
-}
-.fridge-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 39%;
-  border-top: 4px solid var(--color-brown);
-}
-.fridge-handle {
-  position: absolute;
-  left: 13%;
-  top: 49%;
-  width: 5px;
-  height: 21%;
-  background: var(--color-brown);
-  box-shadow: 2px 0 0 var(--color-toast);
-}
-.fridge-title {
-  position: absolute;
-  bottom: 7%;
-  left: 0;
-  right: 0;
-  font-size: clamp(10px, 1.7cqw, 17px);
-}
-.scene-footer {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 5%;
-  text-align: center;
-  color: var(--color-brown);
-  font-size: clamp(10px, 1.75cqw, 17px);
-  letter-spacing: 1px;
-}
-#hud-root {
-  background: var(--color-toast);
-  border-left: 3px solid var(--color-brown);
-  padding: 18px;
+
+.plate-food-item {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  min-width: 0;
+  align-items: center;
+  font-size: 10px;
+  line-height: 1;
 }
-#order-ticket {
+
+.plate-food-item .pfood-emoji {
+  font-size: 12px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.4));
+}
+
+.plate-food-item .pfood-state {
+  font-size: 5px;
+  font-weight: bold;
+  color: #fff;
+  padding: 0px 2px;
+  border-radius: 1px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-top: 1px;
+}
+
+.pfood-state.s-cooked { background: #3A7A1A; }
+.pfood-state.s-burnt  { background: #1A0A00; }
+.pfood-state.s-raw    { background: #8A5020; }
+
+/* ── Rice zone on counter (removed — rice is now on stove) ───────── */
+.rice-zone { display: none; }
+
+/* Counter background click zone — pointer-events none so it never blocks sub-elements */
+.counter-click {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  cursor: default;
+  z-index: 14;
+  pointer-events: none;
+}
+
+/* ── Fridge click zone (covers full fridge sprite) ───────────────── */
+.fridge-click {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  cursor: pointer;
+  /* pointer-events ON — this is the real click target */
+}
+
+/* Fridge label badge */
+.fridge-label {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(43,26,14,0.82);
+  color: #F5C842;
+  font-size: 8px;
+  font-weight: bold;
+  text-align: center;
+  padding: 2px 5px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 20;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  border: 1px solid #F5C842;
+}
+
+/* ── Burners (shared food/progress layout) ────────────────────────── */
+
+.burner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  flex: 1;
+  width: 100%;
+  padding: 3px;
+  border-radius: 3px;
+  background: rgba(0,0,0,0.15);
   position: relative;
-  background: var(--color-paper);
-  padding: 15px 14px 20px;
-  box-shadow: 3px 3px 0 var(--color-shade);
-  clip-path: polygon(
-    0 0,
-    100% 0,
-    100% 97%,
-    95% 100%,
-    90% 97%,
-    85% 100%,
-    80% 97%,
-    75% 100%,
-    70% 97%,
-    65% 100%,
-    60% 97%,
-    55% 100%,
-    50% 97%,
-    45% 100%,
-    40% 97%,
-    35% 100%,
-    30% 97%,
-    25% 100%,
-    20% 97%,
-    15% 100%,
-    10% 97%,
-    5% 100%,
-    0 97%
-  );
 }
-.ticket-top {
+
+.burner:hover { background: rgba(255,140,0,0.25); }
+
+.burner-label {
+  font-size: 8px;
+  color: #FFF8EE;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.burner-food {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  font-size: 15px;
-  border-bottom: 2px dashed var(--color-toast);
-  padding-bottom: 8px;
-  letter-spacing: 1px;
+  min-height: 44px;
 }
-#order-name {
-  font-size: 38px;
-  line-height: 1.2;
-  font-weight: 400;
-  color: var(--color-brown);
-  margin-top: 8px;
+
+.burner-food svg { display: block; }
+
+/* Label tag shown inside burner zones and rice zone */
+.burner-label-tag {
+  font-size: 8px;
+  font-weight: bold;
+  color: #FFF8EE;
+  text-shadow: 1px 1px 0 #000;
+  background: rgba(43,26,14,0.75);
+  padding: 1px 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+  margin-top: 1px;
 }
-#order-desc {
-  font-size: 16px;
+
+.food-state-label {
+  font-size: 7px;
+  color: #fff;
+  padding: 1px 3px;
+  border-radius: 2px;
+  margin-top: 1px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
-.ticket-needs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  font-size: 18px;
-  margin: 13px 0;
-  text-transform: capitalize;
-}
-.done {
-  color: var(--color-green);
-}
-.time-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-}
-.timer-bar {
-  height: 9px;
-  background: var(--color-toast);
-  margin: 5px 0 10px;
+
+.burner-progress-wrap {
+  width: 90%;
+  height: 5px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
   overflow: hidden;
 }
-#timer-fill {
+
+.burner-progress {
   height: 100%;
-  width: 100%;
-  background: var(--color-green);
+  width: 0%;
+  background: #FF8800;
+  border-radius: 2px;
+  transition: width 0.4s linear, background 0.4s;
 }
-.timer-bar.urgent #timer-fill {
-  background: var(--color-red);
-  animation: timer-pulse 0.7s steps(2, end) infinite;
-}
-.ticket-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-top: 2px dashed var(--color-toast);
-  padding-top: 8px;
-  font-size: 11px;
-}
-.ticket-bottom span {
-  font-size: 17px;
-}
-.plating-panel h3 {
-  font-size: 16px;
-  font-weight: 400;
-  letter-spacing: 2px;
-  margin-bottom: 7px;
-}
-.plate-slots {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.plate-slot {
-  position: relative;
-  border: 2px dashed var(--color-brown);
-  text-align: center;
-  font-size: 15px;
-  min-width: 0;
-  padding: 4px 0;
-  text-transform: capitalize;
-}
-.plate-slot > span:first-child {
-  display: block;
-  height: 45px;
-  margin: auto;
-  width: 45px;
-}
-.plate-slot.filled {
-  border-style: solid;
-  background: var(--color-cream);
-}
-.empty-mark {
-  font-size: 32px;
-  color: var(--color-brown);
-}
-.plate-slot button {
-  position: absolute;
-  right: -3px;
-  top: -7px;
-  min-height: 28px;
-  min-width: 28px;
-  padding: 0;
-  box-shadow: none;
-  font-size: 20px;
-}
-.primary {
-  background: var(--color-brown);
-  color: var(--color-cream);
-  width: 100%;
-  padding: 12px 14px;
-  letter-spacing: 1px;
-  font-size: 23px;
-}
-.primary:hover {
-  background: var(--color-dark);
-}
-#serve-btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-#serve-btn.serve-ready {
-  background: var(--color-green);
-}
-#feedback {
-  font-size: 18px;
-  border: 2px solid var(--color-brown);
-  padding: 8px;
-  line-height: 1.1;
-}
-.feedback.good {
-  background: var(--color-cream);
-  color: var(--color-green);
-}
-.feedback.bad {
-  background: var(--color-cream);
-  color: var(--color-red);
-}
-#message-bar {
-  background: var(--color-paper);
-  border-top: 3px solid var(--color-brown);
-  padding: 12px 20px;
-  min-height: 49px;
-  font-size: 20px;
-}
-.bottom-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 18px;
-  color: var(--color-brown);
-  font-size: 16px;
-  border-top: 1px solid var(--color-toast);
-}
-.bottom-bar button {
-  box-shadow: none;
-  font-size: 14px;
-  min-height: 36px;
-  background: transparent;
-}
+
+.cooked-glow { filter: drop-shadow(0 0 3px #5A8A3C); }
+
 .flame {
   position: absolute;
-  top: 30%;
-  left: 15%;
-  width: 70%;
-  height: 40%;
-  display: none;
-  z-index: 1;
-  transform-origin: bottom;
-  contain: layout paint;
-  will-change: transform;
-}
-.burner-zone[data-state="cooking"] .flame,
-.burner-zone[data-state="cooked"] .flame {
-  display: block;
-  animation: flicker 0.25s steps(2, end) infinite alternate;
-}
-.vapour,
-.sizzle {
-  position: absolute;
-  inset: -15% 0 40%;
-  pointer-events: none;
-  display: none;
-  z-index: 4;
-  contain: layout paint;
-}
-.vapour i {
-  position: absolute;
-  width: 3px;
-  height: 13px;
-  left: 30%;
-  bottom: 0;
-  background: var(--color-paper);
-  animation: rise 1.7s steps(5, end) infinite;
-  will-change: transform, opacity;
-}
-.vapour i:nth-child(2) {
-  left: 55%;
-  animation-delay: -0.6s;
-}
-.vapour i:nth-child(3) {
-  left: 75%;
-  animation-delay: -1.2s;
-}
-.burner-zone[data-state="cooked"] .vapour,
-.burner-zone[data-state="burnt"] .vapour {
-  display: block;
-}
-.burner-zone[data-state="burnt"] .vapour i {
-  background: var(--color-pan);
-  width: 7px;
-  height: 15px;
-}
-.sizzle i {
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  background: var(--color-gold);
-  left: 15%;
-  bottom: 0;
-  animation: sizzle 0.6s steps(3, end) infinite;
-}
-.sizzle i:nth-child(2) {
-  left: 85%;
-  animation-delay: -0.2s;
-}
-.sizzle i:nth-child(3) {
+  top: -16px;
   left: 50%;
-  animation-delay: -0.4s;
-}
-.burner-zone[data-state="cooking"] .sizzle {
-  display: block;
-}
-.land {
-  animation: land 0.35s steps(5, end);
-}
-.shake {
-  animation: shake 0.3s steps(4, end);
-}
-.drop-active {
-  outline: 3px dashed var(--color-green);
-}
-#drag-ghost {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 70px;
-  height: 70px;
-  z-index: 100;
+  transform: translateX(-50%);
+  animation: flicker 0.3s infinite alternate;
   pointer-events: none;
-  will-change: transform;
-  contain: layout paint;
 }
-#serve-effect {
-  position: absolute;
-  top: -60%;
-  left: 15%;
-  width: 75%;
-  z-index: 5;
-  pointer-events: none;
-  text-align: center;
-  color: var(--color-dark);
-  opacity: 0;
-  contain: layout paint;
-  will-change: transform, opacity;
+
+@keyframes flicker {
+  from { transform: translateX(-50%) scaleY(1); }
+  to   { transform: translateX(-50%) scaleY(1.3) rotate(3deg); }
 }
-#serve-effect svg {
-  width: 50px;
-  height: 50px;
-  margin: auto;
-}
-#serve-effect b {
-  font-size: 32px;
-  background: var(--color-paper);
-}
-#serve-effect.coin-pop {
-  animation: coin-pop 1.3s steps(10, end);
-}
-dialog {
-  color: var(--color-dark);
-  font: inherit;
-  width: min(92vw, 540px);
-  max-height: 90svh;
-  overflow: auto;
-  padding: clamp(20px, 5vw, 40px);
-  border: 4px solid var(--color-brown);
-  background: var(--color-cream);
-  box-shadow: 8px 8px 0 var(--color-dark);
-}
-dialog::backdrop {
-  background: var(--color-modal);
-}
-dialog h2 {
-  font-size: clamp(36px, 6vw, 60px);
-  line-height: 1;
-  font-weight: 400;
-  margin: 14px 0;
-}
-dialog p {
-  line-height: 1.2;
-  margin: 14px 0;
-}
-dialog .primary {
-  margin-top: 12px;
-}
-dialog small {
-  display: block;
-  font-size: 12px;
-  letter-spacing: 1px;
-  margin-top: 20px;
-}
-.screen-eyebrow {
-  font-size: 13px;
-  letter-spacing: 2px;
-  color: var(--color-brown);
-}
-.screen-kicker {
-  color: var(--color-brown);
-}
-.hero-food {
+
+/* ── HUD Panel ────────────────────────────────────────────────────── */
+#hud-root {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  background: #2B1A0E;
+  border-left: 3px solid #7B4A1E;
   display: flex;
-  justify-content: center;
-  background: var(--color-toast);
-  border-block: 2px solid var(--color-brown);
-  margin: 24px -10px 16px;
-  height: 105px;
-  padding: 5px 30px;
+  flex-direction: column;
 }
-.hero-food svg {
-  width: 33.333%;
+
+#hud {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  height: 100%;
 }
-#start-title {
-  font-size: clamp(62px, 12vw, 92px);
-  line-height: 0.8;
-  letter-spacing: 2px;
+
+/* ── Order Ticket ─────────────────────────────────────────────────── */
+#order-ticket {
+  background: #F5E6C8;
+  border: 3px solid #7B4A1E;
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 12px;
+  color: #2B1A0E;
+  image-rendering: pixelated;
 }
-#start-title span {
-  color: var(--color-brown);
+
+.ticket-header {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: #7B4A1E;
+  margin-bottom: 4px;
 }
-#start-help {
-  display: block;
-  margin: 16px auto 0;
-  box-shadow: none;
-  background: transparent;
-  border: 0;
+
+.ticket-name {
   font-size: 18px;
+  font-weight: bold;
+  color: #2B1A0E;
 }
-#help {
-  width: min(92vw, 620px);
+
+.ticket-desc {
+  font-size: 10px;
+  color: #5A3A1A;
+  margin: 2px 0 6px;
 }
-#help ol {
-  padding-left: 22px;
-  line-height: 1.3;
+
+.ticket-needs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
 }
-#help li {
-  padding-left: 5px;
-  margin-bottom: 12px;
+
+.ticket-needs span {
+  background: #D4956A;
+  border: 2px solid #7B4A1E;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  color: #2B1A0E;
 }
-#help p {
-  font-size: 17px;
-  border-top: 2px dashed var(--color-toast);
-  padding-top: 12px;
+
+.ticket-needs span.done {
+  background: #5A8A3C;
+  color: #fff;
+  border-color: #3A6A1C;
 }
-dl {
-  margin: 20px 0;
+
+.timer-bar {
+  height: 8px;
+  background: rgba(43,26,14,0.2);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid #7B4A1E;
 }
-dl > div {
+
+.timer-fill {
+  height: 100%;
+  background: linear-gradient(to right, #5A8A3C, #F5C842, #E84A2A);
+  transition: width 0.9s linear;
+  border-radius: 3px;
+}
+
+.no-order-msg {
+  font-size: 11px;
+  color: #7B4A1E;
+  font-style: italic;
+}
+
+/* ── Plate Area ───────────────────────────────────────────────────── */
+#plate-area {
+  background: #3A2A1A;
+  border: 3px solid #7B4A1E;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.plate-header {
+  font-size: 11px;
+  font-weight: bold;
+  color: #F5E6C8;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.plate-slots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.plate-slot {
+  flex: 1;
+  min-height: 52px;
+  border: 2px dashed #7B4A1E;
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  text-align: center;
+  padding: 4px;
+  color: #F5E6C8;
+  position: relative;
+  background: rgba(0,0,0,0.2);
+}
+
+.plate-slot.cooked  { background: rgba(90,138,60,0.25); border-color: #5A8A3C; }
+.plate-slot.burnt   { background: rgba(10,5,0,0.6);    border-color: #1A0A00; }
+.plate-slot.raw     { background: rgba(212,149,106,0.2); }
+.plate-slot.empty   { opacity: 0.5; }
+
+.remove-btn {
+  position: absolute;
+  top: 2px; right: 2px;
+  background: #7B4A1E;
+  border: none;
+  color: #fff;
+  font-size: 8px;
+  width: 14px; height: 14px;
+  cursor: pointer;
+  border-radius: 2px;
+  line-height: 1;
+  padding: 0;
+}
+.remove-btn:hover { background: #A05A2E; }
+
+#serve-btn {
+  width: 100%;
+  padding: 8px;
+  background: #7B4A1E;
+  border: 3px solid #5A3A1A;
+  border-radius: 4px;
+  color: #F5E6C8;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s, transform 0.1s;
+}
+
+#serve-btn:hover { background: #A05A2E; }
+
+#serve-btn.serve-ready {
+  background: #5A8A3C;
+  border-color: #3A6A1C;
+  color: #fff;
+  animation: pulse 0.8s infinite alternate;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); }
+  to   { transform: scale(1.04); box-shadow: 0 0 8px #5A8A3C; }
+}
+
+/* ── Coins ────────────────────────────────────────────────────────── */
+#coins-display {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border-bottom: 2px dashed var(--color-toast);
-  padding: 10px 0;
+  gap: 6px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #F5C842;
+  text-shadow: 1px 1px 0 #2B1A0E;
 }
-dd {
-  margin: 0;
-  color: var(--color-brown);
-  font-size: 30px;
+
+/* ── Feedback ─────────────────────────────────────────────────────── */
+#feedback {
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid;
+  animation: slideIn 0.2s ease;
 }
-.paused * {
-  animation-play-state: paused !important;
+
+.feedback.good { background: #2A4A1A; border-color: #5A8A3C; color: #AAFFA0; }
+.feedback.bad  { background: #4A1A1A; border-color: #8A3C3C; color: #FFB0B0; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes flicker {
-  to {
-    transform: scale(0.85, 1.2);
-  }
+
+/* ── Message Bar ──────────────────────────────────────────────────── */
+#message-bar {
+  margin-top: auto;
+  background: #1A0A00;
+  border: 2px solid #7B4A1E;
+  border-radius: 3px;
+  padding: 7px 10px;
+  font-size: 11px;
+  color: #F5E6C8;
+  line-height: 1.4;
 }
-@keyframes rise {
-  0% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  25% {
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate(6px, -32px);
-    opacity: 0;
-  }
+
+/* ── Instructions Overlay ─────────────────────────────────────────── */
+#instructions-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 100;
 }
-@keyframes sizzle {
-  to {
-    transform: translate(5px, -22px);
-    opacity: 0;
-  }
+
+#instructions {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 101;
+  background: #F5E6C8;
+  border: 4px solid #7B4A1E;
+  border-radius: 6px;
+  padding: 20px 24px;
+  max-width: 360px;
+  width: 90%;
+  color: #2B1A0E;
+  font-size: 12px;
 }
-@keyframes land {
-  0% {
-    transform: translateY(-20px) scale(0.8);
-  }
-  65% {
-    transform: translateY(3px) scale(1.1, 0.9);
-  }
-  100% {
-    transform: none;
-  }
+
+#instructions h3 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #7B4A1E;
 }
-@keyframes shake {
-  25%,
-  75% {
-    transform: translateX(-5px);
-  }
-  50% {
-    transform: translateX(5px);
-  }
+
+#instructions ol {
+  padding-left: 18px;
+  line-height: 2;
 }
-@keyframes timer-pulse {
-  50% {
-    opacity: 0.35;
-  }
+
+#close-instructions {
+  margin-top: 14px;
+  width: 100%;
+  padding: 9px;
+  background: #7B4A1E;
+  border: 3px solid #5A3A1A;
+  border-radius: 4px;
+  color: #F5E6C8;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  letter-spacing: 1px;
 }
-@keyframes coin-pop {
-  0% {
-    opacity: 0;
-    transform: translateY(15px) scale(0.6);
-  }
-  20% {
-    opacity: 1;
-    transform: translateY(-5px) scale(1);
-  }
-  75% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-55px);
-  }
-}
-@media (min-width: 1500px) {
-  body {
-    padding-top: 5vh;
-  }
-}
-@media (max-width: 900px) {
-  .game-layout {
-    grid-template-columns: minmax(0, 1fr) 245px;
-  }
-  #hud-root {
-    padding: 12px;
-    gap: 12px;
-  }
-  .ticket-bottom {
-    font-size: 9px;
-  }
-  #order-name {
-    font-size: 32px;
-  }
-  .ticket-needs {
-    font-size: 16px;
-    gap: 4px 7px;
-  }
-  .plate-slot {
-    font-size: 13px;
-  }
-  .masthead {
-    padding: 15px;
-  }
-}
-@media (max-width: 680px) {
-  .game-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  #kitchen-scene {
-    aspect-ratio: 4/3;
-  }
-  #hud-root {
-    border-left: 0;
-    border-top: 3px solid var(--color-brown);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 12px;
-    padding: 12px;
-  }
-  #feedback {
-    grid-column: 1/-1;
-  }
-  #order-ticket {
-    padding: 10px 9px 18px;
-  }
-  .ticket-top {
-    font-size: 12px;
-    letter-spacing: 0;
-  }
-  #order-name {
-    font-size: 30px;
-  }
-  #order-desc {
-    font-size: 13px;
-  }
-  .ticket-needs {
-    font-size: 15px;
-    margin: 8px 0;
-  }
-  .time-label {
-    font-size: 11px;
-  }
-  .ticket-bottom {
-    font-size: 8px;
-    flex-wrap: wrap;
-    gap: 3px;
-  }
-  .ticket-bottom span {
-    font-size: 14px;
-  }
-  .plating-panel {
-    align-self: center;
-  }
-  .plating-panel h3 {
-    font-size: 14px;
-  }
-  .plate-slots {
-    gap: 4px;
-  }
-  .plate-slot {
-    font-size: 12px;
-  }
-  .plate-slot > span:first-child {
-    width: 34px;
-    height: 40px;
-  }
-  .plate-slot button {
-    min-width: 25px;
-    min-height: 28px;
-  }
-  #serve-btn {
-    font-size: 18px;
-    padding: 10px 8px;
-  }
-  .brand-icon {
-    width: 44px;
-    height: 44px;
-  }
-  .brand {
-    gap: 8px;
-  }
-  .brand p {
-    font-size: 8px;
-    letter-spacing: 0.6px;
-  }
-  .masthead {
-    gap: 8px;
-    padding: 14px 10px;
-  }
-  .brand h1 {
-    font-size: clamp(23px, 5.5vw, 36px);
-  }
-  .till {
-    grid-template-columns: 22px auto;
-    font-size: 24px;
-    gap: 0 4px;
-  }
-  .till svg {
-    height: 24px;
-  }
-  .till small {
-    font-size: 9px;
-    letter-spacing: 0;
-  }
-  .game-toolbar {
-    padding: 4px 10px;
-    gap: 10px;
-    font-size: 12px;
-  }
-  .game-toolbar button {
-    font-size: 12px;
-  }
-  .game-toolbar > span:first-child {
-    white-space: nowrap;
-  }
-  .open-light {
-    width: 6px;
-    height: 6px;
-    margin-right: 2px;
-  }
-  #message-bar {
-    font-size: 17px;
-    padding: 10px 12px;
-    min-height: 58px;
-  }
-  .bottom-bar {
-    font-size: 12px;
-    padding: 6px 10px;
-  }
-  .bottom-bar button {
-    font-size: 12px;
-    padding: 6px;
-  }
-  .station-title {
-    bottom: calc(100% + 5px);
-  }
-  .stove {
-    border-width: 3px;
-  }
-  .burners {
-    padding: 3px;
-    gap: 1px;
-  }
-  .pan {
-    border-width: 3px;
-  }
-  .counter {
-    border-width: 3px;
-  }
-  .fridge {
-    border-width: 3px;
-  }
-  .shelf span {
-    font-size: 28px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    scroll-behavior: auto !important;
-    transition: none !important;
-  }
-  #serve-effect.coin-pop {
-    opacity: 1;
-  }
-  #game-wrapper:after {
-    background: none;
-  }
-}
-/* Keep the cooking controls readable in the compact kitchen. */
-.burners {
-  bottom: 32%;
-}
-.stove-front {
-  top: 70%;
-}
-.burner-food {
-  height: 58%;
-  top: -8%;
-}
-#plate-food-stack > span {
-  contain: layout paint;
-}
-.land,
-.shake {
-  will-change: transform;
+
+#close-instructions:hover { background: #A05A2E; }
+
+/* ── Scrollbar ────────────────────────────────────────────────────── */
+#hud-root::-webkit-scrollbar { width: 6px; }
+#hud-root::-webkit-scrollbar-track { background: #1A0A00; }
+#hud-root::-webkit-scrollbar-thumb { background: #7B4A1E; border-radius: 3px; }
+
+/* ── Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #game-wrapper { flex-direction: column; }
+  #kitchen-scene { flex: 0 0 55vh; width: 100%; }
+  #hud-root { flex: 1; border-left: none; border-top: 3px solid #7B4A1E; }
 }

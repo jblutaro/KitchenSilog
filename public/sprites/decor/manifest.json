@@ -1,0 +1,58 @@
+[
+  {
+    "file": "window.png",
+    "frameWidth": 24,
+    "frameHeight": 20,
+    "frames": 1,
+    "fps": 0
+  },
+  {
+    "file": "wall-clock.png",
+    "frameWidth": 10,
+    "frameHeight": 10,
+    "frames": 1,
+    "fps": 0
+  },
+  {
+    "file": "calendar.png",
+    "frameWidth": 10,
+    "frameHeight": 12,
+    "frames": 1,
+    "fps": 0
+  },
+  {
+    "file": "pendant-lamp.png",
+    "frameWidth": 8,
+    "frameHeight": 14,
+    "frames": 2,
+    "fps": 1
+  },
+  {
+    "file": "plant.png",
+    "frameWidth": 12,
+    "frameHeight": 18,
+    "frames": 1,
+    "fps": 0
+  },
+  {
+    "file": "rice-sack.png",
+    "frameWidth": 14,
+    "frameHeight": 16,
+    "frames": 1,
+    "fps": 0
+  },
+  {
+    "file": "stool.png",
+    "frameWidth": 12,
+    "frameHeight": 12,
+    "frames": 1,
+    "fps": 0
+  },
+  {
+    "file": "banig-rug.png",
+    "frameWidth": 30,
+    "frameHeight": 6,
+    "frames": 1,
+    "fps": 0
+  }
+]

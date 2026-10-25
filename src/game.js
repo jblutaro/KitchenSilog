@@ -1,534 +1,349 @@
-/**
- * game.js
- * Core game state, kitchen hotspot setup, and game loop.
- */
-import { randomOrder, checkPlate } from './orders.js';
 import { CookingSlot } from './cooking.js';
-import { renderHUD, showFeedback } from './ui.js';
-import { riceSprite, eggSprite, meatSprite, flameSVG } from './sprites.js';
+import { ORDERS } from './orders.js';
+import { createState, makeOrder, DAY_LENGTH } from './state.js';
+import { addIngredient, removeIngredient } from './stations/basket.js';
+import { createPlate, placeFood, isComplete } from './stations/plate.js';
+import { scorePlate } from './scoring.js';
+import { SpriteLoader } from './art/spriteLoader.js';
+import { layout } from './art/layout.js';
+import { Audio } from './audio.js';
+import { renderKitchen } from './views/kitchen.js';
+import { renderStove } from './views/stove.js';
+import { renderFridge } from './views/fridge.js';
+import { drawHighlights } from './views/shared.js';
+import { drawHoverTag } from './art/labels.js';
+import { RoomRenderer } from './art/room.js';
+import { attachInput } from './input/drag.js';
+import { buildUI, renderHUD } from './ui.js';
 
-// ─── STATE ──────────────────────────────────────────────────────────────────
-const state = {
-  coins:    0,
-  order:    null,
-  plate:    { rice: false, riceState: null, egg: false, eggState: null, meat: null, meatState: null },
-  feedback: null,
-  message:  '👆 Click the Refrigerator to get ingredients, then cook on the Stove!',
-
-  // cooking slots
-  slots: {
-    rice:       null,   // CookingSlot – lives in rice cooker
-    egg:        null,   // CookingSlot – stove left burner
-    meat:       null,   // CookingSlot – stove right burner
-  },
-
-  // which meat is currently being cooked
-  meatType: null,
-
-  renderUI: null,   // injected below
-  onPlateChange: null,
-};
-
-// ─── INIT ────────────────────────────────────────────────────────────────────
-export function initGame(appEl) {
-  buildDOM(appEl);
-  state.renderUI    = () => renderHUD(document.getElementById('hud-root'), state);
-  state.onPlateChange = () => { updateScenePlate(); state.renderUI(); };
-
-  startNewOrder();
-  state.renderUI();
-  startOrderTimer();
+let state, art, canvas, ctx, sound, room, scale = 2, zones = [], lastHUD = 0, uiPressed = false;
+const renderers = { kitchen: renderKitchen, stove: renderStove, fridge: renderFridge };
+const viewNames = { kitchen: 'Kitchen', stove: 'Stove', fridge: 'Fridge' };
+function tip(message, mistake = false) {
+  state.message = message; state.messageUntil = state.now + 3500;
+  if (mistake) {
+    state.shakeUntil = state.now + 400;
+    canvas.classList.remove('mistake'); void canvas.offsetWidth; canvas.classList.add('mistake');
+  }
+  lastHUD = 0;
 }
-
-// ─── DOM LAYOUT ──────────────────────────────────────────────────────────────
-function buildDOM(appEl) {
-  appEl.innerHTML = `
-  <div id="game-wrapper">
-
-    <!-- KITCHEN SCENE -->
-    <div id="kitchen-scene">
-
-      <!-- BACKGROUND -->
-      <img id="kitchen-bg" src="/kitchen.png" alt="Filipino kitchen background" draggable="false"/>
-
-      <!-- ═══ SPRITE LAYER — each sprite sits at exact background position ═══ -->
-
-      <!-- STOVE SPRITE (left ~3%–27%, top ~30%–78%) -->
-      <div id="sprite-stove" class="sprite-wrap" title="Stove">
-        <img src="/stove.svg" alt="Stove" class="kitchen-sprite" draggable="false"/>
-
-        <!-- Top-left burners → egg slot -->
-        <div class="burner-zone" id="burner-egg">
-          <div class="burner-food" id="food-egg"></div>
-          <div class="burner-progress-wrap"><div class="burner-progress" id="prog-egg"></div></div>
-          <div class="burner-label-tag">🍳 Egg</div>
-        </div>
-
-        <!-- Top-right burners → meat slot -->
-        <div class="burner-zone" id="burner-meat">
-          <div class="burner-food" id="food-meat"></div>
-          <div class="burner-progress-wrap"><div class="burner-progress" id="prog-meat"></div></div>
-          <div class="burner-label-tag">🥩 Meat</div>
-        </div>
-
-        <!-- Bottom-center → rice slot (uses the two bottom burners together) -->
-        <div class="burner-zone" id="burner-rice">
-          <div class="burner-food" id="food-rice"></div>
-          <div class="burner-progress-wrap"><div class="burner-progress" id="prog-rice"></div></div>
-          <div class="burner-label-tag">🍚 Rice</div>
-        </div>
-      </div>
-
-      <!-- COUNTER SPRITE (center ~27%–72%, top ~37%–72%) -->
-      <div id="sprite-counter" class="sprite-wrap" title="Counter – plating area">
-        <img src="/counter.svg" alt="Counter" class="kitchen-sprite" draggable="false"/>
-
-        <!-- PLATE SPRITE on the cutting board (left of counter) -->
-        <div id="plate-scene">
-          <img id="plate-sprite-img" src="/plate.svg" alt="Plate" draggable="false"/>
-          <div id="plate-food-stack">
-            <!-- food items injected here by updateScenePlate() -->
-          </div>
-        </div>
-
-        <!-- Counter background click (informational) -->
-        <div class="counter-click" id="hs-counter" title="Counter – plating area"></div>
-      </div>
-
-      <!-- FRIDGE SPRITE (right ~72%–96%, top ~28%–80%) -->
-      <div id="sprite-fridge" class="sprite-wrap" title="Refrigerator – click to get ingredients">
-        <img src="/fridge.svg" alt="Refrigerator" class="kitchen-sprite" draggable="false"/>
-        <div class="fridge-click" id="hs-fridge"></div>
-        <div class="fridge-label">🧊 GET<br>INGR.</div>
-      </div>
-
-    </div><!-- end kitchen-scene -->
-
-    <!-- HUD PANEL -->
-    <div id="hud-root"></div>
-
-    <!-- INSTRUCTIONS OVERLAY -->
-    <div id="instructions">
-      <h3>🍳 How to Play</h3>
-      <ol>
-        <li>Check the <strong>Order Ticket</strong> on the right.</li>
-        <li>Click the <strong>Fridge</strong> (right) to load ingredients onto the stove.</li>
-        <li>Click the <strong>top-left</strong> stove zone to cook the Egg.</li>
-        <li>Click the <strong>top-right</strong> stove zone to cook the Meat.</li>
-        <li>Click the <strong>bottom</strong> stove zone to cook the Rice.</li>
-        <li>Wait for items to turn <span style="color:#5A8A3C">green (Cooked)</span>.</li>
-        <li><strong>Drag</strong> a cooked item onto the <strong>Plate</strong> on the counter — or just click it!</li>
-        <li>Click <strong>SERVE</strong> in the right panel when all three are ready!</li>
-        <li>Don't let items go <span style="color:#FF4400">Burnt 🔥</span>!</li>
-      </ol>
-      <button id="close-instructions">Got it! Let's cook 🍳</button>
-    </div>
-    <div id="instructions-backdrop"></div>
-
-  </div>`;
-
-  bindHotspots();
-  bindPlateDropZone();
-  bindInstructions();
+function effect(kind, data = {}) { state.effects.push({ kind, start: state.now, ...data }); }
+function advance(step) { state.tutorial = Math.max(state.tutorial, step); }
+function usable() { return !state.ended && !state.animation; }
+function completeForOrder() { return state.orders.some(order => isComplete(state.plate, order.meat)); }
+function pick(type) {
+  if (!usable() || state.view !== 'fridge') return;
+  if (!addIngredient(state.basket, type)) { tip('Basket full — return an item or load a burner.', true); return; }
+  const item = state.basket.at(-1);
+  effect('pick', { type, id: item.id }); effect('land', { id: item.id, start: state.now + 300 }); sound.play('pick');
+  advance(1); tip(`${type} added · ${state.basket.length}/4 in your basket.`);
 }
-
-// ─── HOTSPOT BINDINGS ────────────────────────────────────────────────────────
-function bindHotspots() {
-  // FRIDGE — single binding on the overlay zone inside sprite
-  document.getElementById('hs-fridge').addEventListener('click', onFridgeClick);
-
-  // STOVE — each burner zone handles its own ingredient
-  document.getElementById('burner-egg').addEventListener('click',  onEggBurnerClick);
-  document.getElementById('burner-meat').addEventListener('click', onMeatBurnerClick);
-  document.getElementById('burner-rice').addEventListener('click', onRiceBurnerClick);
+function navigate(view) {
+  if (!usable() || view === state.view) return;
+  state.selected = null; state.hover = null;
+  if (state.view === 'fridge') {
+    changeView('kitchen'); state.animation = { kind: 'fridge', reverse: true, start: state.now, nextView: view };
+    sound.play('close'); advance(2);
+  } else if (view === 'fridge') {
+    changeView('kitchen'); state.animation = { kind: 'fridge', reverse: false, start: state.now, nextView: 'fridge' };
+    sound.play('open'); advance(1);
+  } else changeView(view);
+  lastHUD = 0;
 }
-
-// ─── FRIDGE ──────────────────────────────────────────────────────────────────
-function onFridgeClick() {
-  if (!state.order) {
-    setMessage('⚠️ No order yet! Wait for a customer.');
-    return;
+function changeView(view) {
+  state.view = view; state.hover = null;
+  canvas.classList.remove('view-enter'); void canvas.offsetWidth; canvas.classList.add('view-enter');
+  fitCanvas(); lastHUD = 0;
+}
+function sink() {
+  if (!usable()) return;
+  if (state.plate) { tip('One plate at a time — finish this breakfast first.', true); return; }
+  state.plate = createPlate(); sound.play('plate'); advance(4); tip('Clean plate ready on the cutting board.');
+}
+function sourceFood(source) {
+  if (!source) return null;
+  if (source.kind === 'basket') return state.basket.find(item => item.id === source.id);
+  if (source.kind === 'burner') return state.burners[source.index]?.food;
+  if (source.kind === 'plated') return state.plate?.[source.slot];
+  return null;
+}
+function canDrop(source, target) {
+  if (!source || !target || state.ended) return false;
+  const food = sourceFood(source);
+  if (target.kind === 'trash') return ['basket', 'burner', 'plated'].includes(source.kind) && !!food;
+  if (target.kind === 'burner' && source.kind === 'basket' && food) {
+    const slot = state.burners[target.index];
+    return food.type === 'garlic' ? !!slot && slot.itemType === 'rice' && ['raw', 'cooking'].includes(slot.state) && !slot.garlic : !slot;
   }
-
-  let loaded = [];
-
-  if (!state.slots.egg) {
-    state.slots.egg = new CookingSlot('egg', s => updateBurnerUI('egg', s));
-    updateBurnerUI('egg', state.slots.egg);
-    loaded.push('egg');
+  if (['plate', 'plated'].includes(target.kind) && source.kind === 'burner' && food && state.plate)
+    return ['cooked', 'overcooked'].includes(food.stage) && !state.plate[['rice', 'egg'].includes(food.type) ? food.type : 'meat'];
+  if (target.kind === 'ticket' && source.kind === 'plate') return isComplete(state.plate, state.orders.find(order => order.id === target.id)?.meat);
+  return false;
+}
+function canDrag(payload) {
+  if (!usable() || !payload) return null;
+  if (payload.kind === 'plate') {
+    if (!completeForOrder()) { tip('Plate locked — add cooked rice, egg and an ordered meat.', true); return null; }
+    return payload;
   }
-
-  if (!state.slots.rice) {
-    state.slots.rice = new CookingSlot('rice', s => updateBurnerUI('rice', s));
-    updateBurnerUI('rice', state.slots.rice);
-    loaded.push('rice');
+  if (payload.kind === 'burner') {
+    if (!state.burners[payload.index]) return null;
+    return payload;
   }
-
-  if (!state.slots.meat) {
-    const meatType = state.order.meat;
-    state.meatType  = meatType;
-    state.slots.meat = new CookingSlot(meatType, s => updateBurnerUI('meat', s));
-    updateBurnerUI('meat', state.slots.meat);
-    loaded.push(meatType);
+  return ['basket', 'plated'].includes(payload.kind) ? payload : null;
+}
+function removeSource(source) {
+  if (source.kind === 'basket') removeIngredient(state.basket, source.id);
+  if (source.kind === 'burner') { state.burners[source.index].reset(); state.burners[source.index] = null; }
+  if (source.kind === 'plated') state.plate[source.slot] = null;
+}
+function drop(source, target) {
+  if (!usable()) return false;
+  // A ticket can report a wrong order even when it is not a valid highlighted target.
+  if (source?.kind === 'plate' && target?.kind === 'ticket') { servePlate(target.id); return true; }
+  if (!canDrop(source, target)) {
+    const food = sourceFood(source);
+    tip(food?.stage === 'burnt' ? 'Burnt food belongs in the trash.'
+      : target?.kind === 'plate' && !state.plate ? 'Get a clean plate from the sink first.'
+      : food?.stage && !['cooked', 'overcooked'].includes(food.stage) && target?.kind === 'plate' ? 'Give it a little longer — it is not cooked yet.'
+      : 'That does not go here. Try another target.', true);
+    return false;
   }
-
-  if (loaded.length > 0) {
-    // Reset last-rendered state so new ingredients render immediately
-    loaded.forEach(k => { _lastRenderedState[k] = null; });
-    setMessage(`✅ Loaded ${loaded.join(', ')} onto stove. Now click each burner to start cooking!`);
-    state.renderUI();
+  const food = sourceFood(source);
+  if (target.kind === 'trash') {
+    removeSource(source); sound.play('trash'); tip(`${food.type} discarded. Burner and plate space freed.`);
+  } else if (target.kind === 'burner') {
+    if (food.type === 'garlic') {
+      state.burners[target.index].addGarlic(); tip('Garlic added! A little extra love for your sinangag.');
+    } else {
+      const slot = new CookingSlot(food.type); slot.startCooking(state.now); state.burners[target.index] = slot;
+      advance(3); tip(`${food.type} cooking on burner ${target.index + 1}. Watch the green gauge window.`);
+    }
+    removeIngredient(state.basket, source.id); effect('land', { index: target.index });
   } else {
-    setMessage('⚠️ Stove & cooker are full. Cook or serve what\'s there.');
+    const wasComplete = completeForOrder();
+    if (!placeFood(state.plate, food)) return false;
+    removeSource(source); sound.play('plate');
+    if (!wasComplete && completeForOrder()) { effect('sparkle'); advance(5); tip('Breakfast ready — drag the plate to a matching ticket.'); }
+    else tip(`${food.type} plated${food.stage === 'overcooked' ? ' — a little overdone' : ''}.`);
   }
+  state.selected = null; lastHUD = 0; return true;
 }
-
-// ─── RICE BURNER (bottom stove zone) ─────────────────────────────────────────
-function onRiceBurnerClick() {
-  const slot = state.slots.rice;
-  if (!slot) {
-    setMessage('❗ Open the Fridge first to load rice!');
+function flip(index) {
+  if (!usable()) return;
+  if (state.burners[index]?.flip()) { sound.play('flip'); tip('Nice flip! Quality bonus earned.'); }
+  else tip('Flip when the little turner appears.');
+}
+function activate(payload) {
+  if (!usable() || !payload) return;
+  if (state.selected && canDrop(state.selected, payload)) { drop(state.selected, payload); return; }
+  if (payload.kind === 'view' || payload.kind === 'close') { navigate(payload.kind === 'close' ? 'kitchen' : payload.view); return; }
+  if (payload.kind === 'sink') { sink(); return; }
+  if (payload.kind === 'ingredient') { pick(payload.type); return; }
+  if (payload.kind === 'basket' && state.view === 'fridge') {
+    removeIngredient(state.basket, payload.id); tip('Ingredient returned to the shelf.'); return;
+  }
+  if (payload.kind === 'flip') { flip(payload.index); return; }
+  if (payload.kind === 'trash') { if (state.selected) drop(state.selected, payload); else tip('Select an item, then the trash bin.'); return; }
+  if (payload.kind === 'ticket') {
+    if (state.selected?.kind === 'plate') servePlate(payload.id);
+    else { tip('Finish your plate, then select it and choose a ticket.'); }
     return;
   }
-  handleBurnerClick('rice', slot, 'rice');
-}
-
-// ─── EGG BURNER ──────────────────────────────────────────────────────────────
-function onEggBurnerClick() {
-  const slot = state.slots.egg;
-  if (!slot) {
-    setMessage('❗ Open the Fridge first to load an egg!');
-    return;
+  // A click on plated food selects it for removal; dragging a complete plate is
+  // available from its rim and the accessible Select plate button.
+  if (payload.kind === 'burner') state.selectedBurner = payload.index;
+  if (payload.kind === 'burner' && state.view === 'kitchen' && !state.selected && !state.burners[payload.index]) {
+    navigate('stove'); return;
   }
-  handleBurnerClick('egg', slot, 'egg');
+  const source = canDrag(payload);
+  if (source) { state.selected = state.selected && JSON.stringify(state.selected) === JSON.stringify(source) ? null : source; lastHUD = 0; }
+  else if (payload.kind === 'burner') tip(`Burner ${payload.index + 1} is empty — select an ingredient first.`);
 }
-
-// ─── MEAT BURNER ─────────────────────────────────────────────────────────────
-function onMeatBurnerClick() {
-  const slot = state.slots.meat;
-  if (!slot) {
-    setMessage('❗ Open the Fridge first to load meat!');
-    return;
-  }
-  handleBurnerClick('meat', slot, state.meatType);
-}
-
-function handleBurnerClick(slotKey, slot, itemLabel) {
-  if (slot.state === 'raw') {
-    slot.startCooking();
-    setMessage(`🔥 ${itemLabel} is cooking on the stove!`);
-    return;
-  }
-  if (slot.state === 'cooking') {
-    setMessage(`⏳ ${itemLabel} is still cooking…`);
-    return;
-  }
-  if (slot.state === 'cooked') {
-    const pickedState = slot.pickup();
-    state.slots[slotKey] = null;
-    _lastRenderedState[slotKey] = null;
-    disableDrag(slotKey);
-    addToPlate(slotKey, pickedState);
-    setMessage(`✅ ${itemLabel} placed on the plate!`);
-    return;
-  }
-  if (slot.state === 'burnt') {
-    slot.pickup();
-    state.slots[slotKey] = null;
-    _lastRenderedState[slotKey] = null;
-    disableDrag(slotKey);
-    if (slotKey === 'meat') state.meatType = null;
-    setMessage(`😱 ${itemLabel} is burnt! Get a fresh one from the Fridge.`);
-    return;
-  }
-}
-
-// ─── PLATE ───────────────────────────────────────────────────────────────────
-function addToPlate(key, cookState) {
-  if (key === 'rice') {
-    state.plate.rice      = true;
-    state.plate.riceState = cookState;
-  } else if (key === 'egg') {
-    state.plate.egg      = true;
-    state.plate.eggState = cookState;
-  } else if (key === 'meat') {
-    state.plate.meat      = state.meatType;
-    state.plate.meatState = cookState;
-  }
-  updateScenePlate();
-  state.renderUI();
-  checkServeReady();
-}
-
-/** Update the visible plate sprite on the counter in the scene */
-function updateScenePlate() {
-  const stack = document.getElementById('plate-food-stack');
-  if (!stack) return;
-
-  const { plate } = state;
-
-  const items = [
-    { hasItem: plate.rice,   cookState: plate.riceState, emoji: '🍚', label: 'Rice' },
-    { hasItem: plate.egg,    cookState: plate.eggState,  emoji: '🍳', label: 'Egg'  },
-    { hasItem: !!plate.meat, cookState: plate.meatState, emoji: getMeatEmoji(plate.meat), label: plate.meat || '' },
-  ].filter(i => i.hasItem);
-
-  stack.innerHTML = items.map(({ emoji, cookState, label }) => `
-    <div class="plate-food-item">
-      <span class="pfood-emoji">${emoji}</span>
-      <span class="pfood-state s-${cookState}">${cookState === 'cooked' ? '✓' : cookState}</span>
-    </div>
-  `).join('');
-}
-
-function getMeatEmoji(meatType) {
-  if (meatType === 'tapa')      return '🥩';
-  if (meatType === 'tocino')    return '🍖';
-  if (meatType === 'longganisa') return '🌭';
-  return '🥩';
-}
-
-function checkServeReady() {
-  const { plate, order } = state;
+export function servePlate(orderId) {
+  if (!usable()) return;
+  const order = orderId ? state.orders.find(entry => entry.id === orderId)
+    : state.orders.find(entry => isComplete(state.plate, entry.meat)) || state.orders[0];
   if (!order) return;
-  if (plate.rice && plate.riceState === 'cooked'
-   && plate.egg  && plate.eggState  === 'cooked'
-   && plate.meat === order.meat && plate.meatState === 'cooked') {
-    setMessage('🎉 Plate is ready! Click SERVE to send it!');
-  }
-}
-
-// ─── SERVE (called from HUD serve button) ────────────────────────────────────
-export function servePlate() {
-  const { plate, order } = state;
-  const result = checkPlate(order, plate);
-
+  const result = scorePlate(state.plate, order, state.now, state.streak);
   if (!result.ok) {
-    showFeedback(state, `❌ ${result.reason}`, 'bad');
-    return;
+    order.penalty = Math.min(2, order.penalty + 1); state.streak = 0;
+    tip(`Not quite ${order.name} — needs rice, egg and ${order.meat}. No coins; remove wrong food using the trash.`, true); return;
   }
-
-  // All items must be cooked (not burnt)
-  if (plate.riceState === 'burnt' || plate.eggState === 'burnt' || plate.meatState === 'burnt') {
-    showFeedback(state, '💀 Burnt food! Customer unhappy. -5 coins.', 'bad');
-    state.coins = Math.max(0, state.coins - 5);
-    resetPlate();
-    state.renderUI();
-    return;
-  }
-
-  // Success!
-  const bonus = Math.round((order.timeLeft / 100) * 10); // time bonus up to 10
-  const earned = order.reward + bonus;
-  state.coins += earned;
-  showFeedback(state, `😋 Sarap! +₱${earned} (₱${order.reward} + ₱${bonus} bonus)`, 'good');
-  resetPlate();
-  startNewOrder();
-  state.renderUI();
+  const total = result.coins + result.tip + result.bonus;
+  state.coins += total; state.earnings += total; state.served++;
+  state.streak = result.perfect ? state.streak + 1 : 0; state.bestStreak = Math.max(state.bestStreak, state.streak);
+  state.result = { ...result, start: state.now }; sound.play('serve');
+  setTimeout(() => sound.play('coin'), 180);
+  state.orders.splice(state.orders.indexOf(order), 1, nextOrder());
+  state.plate = null; state.selected = null; advance(6); tip(`Served! +₱${total}. Get your next clean plate from the sink.`);
 }
-
-function resetPlate() {
-  state.plate = { rice: false, riceState: null, egg: false, eggState: null, meat: null, meatState: null };
-  updateScenePlate();
+function nextOrder() {
+  const keys = Object.keys(ORDERS);
+  return makeOrder(keys[state.serial % keys.length], state.now, state.serial++);
 }
-
-// ─── ORDER TIMER ─────────────────────────────────────────────────────────────
-let orderTimerInterval = null;
-
-function startOrderTimer() {
-  clearInterval(orderTimerInterval);
-  orderTimerInterval = setInterval(() => {
-    if (!state.order) return;
-    state.order.timeLeft = Math.max(0, state.order.timeLeft - (100 / state.order.timeLimit));
-
-    if (state.order.timeLeft <= 0) {
-      showFeedback(state, '⏰ Too slow! Customer left. No coins.', 'bad');
-      resetPlate();
-      // clear all cooking slots
-      ['rice','egg','meat'].forEach(k => {
-        if (state.slots[k]) { state.slots[k].reset(); state.slots[k] = null; }
-      });
-      state.meatType = null;
-      startNewOrder();
-    }
-    state.renderUI();
-  }, 1000);
+function fitCanvas() {
+  if (!canvas) return;
+  const [w, h] = layout[state.view].size;
+  const stage = document.querySelector('.stage');
+  const availableWidth = stage.clientWidth - 8;
+  const availableHeight = stage.clientHeight - 8;
+  const fit = Math.floor(Math.min(availableWidth / w, availableHeight / h));
+  scale = state.view === 'kitchen' ? Math.max(4, Math.floor(fit / 2) * 2) : Math.max(1, fit);
+  if (state.view === 'kitchen') state.kitchenScale = scale;
+  canvas.width = w * scale; canvas.height = h * scale;
+  canvas.style.width = `${canvas.width}px`; canvas.style.height = `${canvas.height}px`;
+  stage.style.setProperty('--floor-line', `${(stage.clientHeight - canvas.height) / 2 + canvas.height * 0.73}px`);
+  stage.dataset.view = state.view;
+  ctx.imageSmoothingEnabled = false;
 }
-
-function startNewOrder() {
-  const order = randomOrder();
-  order.timeLeft = 100; // percentage for timer bar
-  state.order = order;
-  setMessage(`🧑‍🍳 New order: ${order.name}! Click Fridge to start.`);
+function hit(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  // Keep pointer coordinates aligned during the existing scale/fade transition.
+  const [artWidth, artHeight] = layout[state.view].size;
+  const x = (clientX - rect.left) / rect.width * artWidth;
+  const y = (clientY - rect.top) / rect.height * artHeight;
+  return zones.findLast(zone => x >= zone.rect[0] && y >= zone.rect[1] && x <= zone.rect[0] + zone.rect[2] && y <= zone.rect[1] + zone.rect[3]);
 }
-
-// ─── DRAG & DROP STATE ───────────────────────────────────────────────────────
-let dragKey = null; // 'egg' | 'meat' | 'rice' — what's being dragged
-
-// Called from updateBurnerUI whenever a slot reaches 'cooked'
-function enableDrag(key) {
-  const foodEl = document.getElementById(`food-${key}`);
-  if (!foodEl) return;
-  foodEl.setAttribute('draggable', 'true');
-  foodEl.style.cursor = 'grab';
-
-  foodEl.addEventListener('dragstart', (e) => {
-    dragKey = key;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', key);
-    foodEl.classList.add('dragging');
-    // Show the plate drop zone highlight
-    document.getElementById('plate-scene').classList.add('drop-target-active');
-    setMessage('🍽️ Drop it on the plate!');
-  });
-
-  foodEl.addEventListener('dragend', () => {
-    foodEl.classList.remove('dragging');
-    document.getElementById('plate-scene').classList.remove('drop-target-active');
-    dragKey = null;
-  });
+function onHover(zone) {
+  state.hover = zone?.id || null; canvas.style.cursor = zone ? 'pointer' : 'default';
+  const label = document.querySelector('#scene-label');
+  label.textContent = '';
 }
-
-function disableDrag(key) {
-  const foodEl = document.getElementById(`food-${key}`);
-  if (!foodEl) return;
-  foodEl.removeAttribute('draggable');
-  foodEl.style.cursor = '';
-  // Clear the visual if the slot is gone
-  if (!state.slots[key]) {
-    foodEl.innerHTML = '';
-    const progEl = document.getElementById(`prog-${key}`);
-    if (progEl) progEl.style.width = '0%';
-  }
-}
-
-// Wire up the plate as a drop zone
-function bindPlateDropZone() {
-  const plateEl = document.getElementById('plate-scene');
-
-  plateEl.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    plateEl.classList.add('drop-hover');
-  });
-
-  plateEl.addEventListener('dragleave', () => {
-    plateEl.classList.remove('drop-hover');
-  });
-
-  plateEl.addEventListener('drop', (e) => {
-    e.preventDefault();
-    plateEl.classList.remove('drop-hover');
-    plateEl.classList.remove('drop-target-active');
-
-    const key = e.dataTransfer.getData('text/plain') || dragKey;
-    if (!key) return;
-
-    const slot = state.slots[key];
-    if (!slot) return;
-
-    if (slot.state === 'cooked') {
-      const pickedState = slot.pickup();
-      state.slots[key] = null;
-      _lastRenderedState[key] = null;
-      disableDrag(key);
-      addToPlate(key, pickedState);
-      setMessage(`✅ ${key} placed on the plate!`);
-    } else if (slot.state === 'burnt') {
-      setMessage(`🚫 That ${key} is burnt — can't plate it!`);
-    } else {
-      setMessage(`⏳ ${key} is not cooked yet!`);
-    }
-    dragKey = null;
-  });
-}
-
-
-// Track last-rendered state to avoid full DOM rebuild every RAF frame
-const _lastRenderedState = { egg: null, meat: null, rice: null };
-
-function updateBurnerUI(key, slot) {
-  const foodEl = document.getElementById(`food-${key}`);
-  const progEl = document.getElementById(`prog-${key}`);
-  if (!foodEl || !progEl) return;
-
-  const stateChanged = _lastRenderedState[key] !== slot.state;
-
-  // ── Only rebuild HTML when cook state actually changes ──────────────
-  if (stateChanged) {
-    _lastRenderedState[key] = slot.state;
-
-    let svg = '';
-    if (key === 'rice')      svg = riceSprite(slot.state);
-    else if (key === 'egg')  svg = eggSprite(slot.state);
-    else                     svg = meatSprite(state.meatType || 'tapa', slot.state);
-
-    const stateColors = {
-      raw:     '#D4956A',
-      cooking: '#FF8800',
-      cooked:  '#5A8A3C',
-      burnt:   '#1A0A00',
-    };
-    const label = slot.state === 'cooked' ? 'drag to plate!' : slot.state;
-    foodEl.innerHTML = svg + `<span class="food-state-label" style="background:${stateColors[slot.state]}">${label}</span>`;
-
-    // Drag enable/disable
-    if (slot.state === 'cooked') {
-      enableDrag(key);
-    } else {
-      disableDrag(key);
-    }
-
-    // Glow class
-    if (slot.state === 'cooked') foodEl.classList.add('cooked-glow');
-    else                         foodEl.classList.remove('cooked-glow');
-
-    // Flame indicator
-    const burnerEl = document.getElementById(`burner-${key}`);
-    if (burnerEl) {
-      const existingFlame = burnerEl.querySelector('.flame');
-      if (slot.state === 'cooking' && !existingFlame) {
-        const f = document.createElement('div');
-        f.className = 'flame';
-        f.innerHTML = flameSVG();
-        const foodDiv = burnerEl.querySelector('.burner-food');
-        if (foodDiv) burnerEl.insertBefore(f, foodDiv);
-        else burnerEl.prepend(f);
-      } else if (slot.state !== 'cooking' && existingFlame) {
-        existingFlame.remove();
+function createGhost() {
+  const element = document.querySelector('#drag-ghost'), gc = element.getContext('2d');
+  return {
+    show(source) {
+      const food = sourceFood(source), name = source.kind === 'plate' ? 'plate-zoom'
+        : source.kind === 'basket' ? `ing-${food.type}` : `cook-${food.type}-zoom`;
+      const sprite = art.sprites.get(name), gs = 2;
+      element.width = sprite.frameWidth * gs; element.height = sprite.frameHeight * gs;
+      gc.imageSmoothingEnabled = false;
+      const frame = food?.stage ? ['raw', 'cooking', 'cooked', 'overcooked', 'burnt'].indexOf(food.stage) : 0;
+      art.draw(gc, name, 0, 0, gs, frame);
+      if (source.kind === 'plate') {
+        for (const slot of ['rice', 'meat', 'egg']) {
+          const item = state.plate[slot], [x, y] = layout.stove.plated[slot];
+          art.draw(gc, `plated-${item.type}-zoom`, x * gs, (y + 3) * gs, gs, item.stage === 'overcooked' ? 1 : 0);
+        }
       }
+      element.style.display = 'block';
+    },
+    move(x, y) { element.style.left = `${x}px`; element.style.top = `${y}px`; },
+    hide() { element.style.display = 'none'; },
+  };
+}
+function finishDay() {
+  state.ended = true; state.drag = null; state.selected = null; sound.sizzle(0);
+  document.querySelector('#drag-ghost').style.display = 'none';
+  const summary = document.querySelector('#summary');
+  summary.innerHTML = `<span class="eyebrow">THE LAST PLATE IS OUT</span><h2 id="summary-title">That’s a good day’s work.</h2><p>Day ${state.day} at Silog Kitchen</p><div class="summary-stats"><span><b>${state.served}</b>breakfasts served</span><span><b>₱${state.earnings}</b>earned today</span><span><b>${state.bestStreak}</b>best perfect streak</span></div><p>Tomorrow, another fresh start.</p><button id="next-day" class="serve-button">Start day ${state.day + 1} →</button>`;
+  summary.showModal();
+  // Upgrade screens can subscribe here without changing the day loop.
+  window.dispatchEvent(new CustomEvent('silog:day-end', { detail: { day: state.day, served: state.served, earnings: state.earnings, bestStreak: state.bestStreak } }));
+}
+function frame() {
+  state.now = Date.now();
+  if (!state.ended) {
+    for (const slot of state.burners) slot?.update(state.now);
+    state.effects = state.effects.filter(entry => state.now - entry.start < (entry.kind === 'pick' ? 300 : entry.kind === 'land' ? 200 : 700));
+    if (state.animation && state.now - state.animation.start >= 400) {
+      const view = state.animation.nextView; state.animation = null; changeView(view);
     }
+    if (state.now - state.startedAt >= DAY_LENGTH) finishDay();
+    else for (let i = 0; i < state.orders.length; i++) if (state.now >= state.orders[i].expiresAt) {
+      state.orders[i] = nextOrder(); state.streak = 0; tip('A customer had to leave. A new order is waiting.', true);
+    }
+    sound.sizzle(state.burners.filter(slot => slot?.cooking).length);
   }
-
-  // ── Progress bar updates every frame (no DOM rebuild) ───────────────
-  if (slot.state === 'cooking') {
-    progEl.style.width = slot.progress + '%';
-    progEl.style.background = '#FF8800';
-  } else if (slot.state === 'cooked') {
-    progEl.style.width = (100 - slot.progress) + '%';
-    progEl.style.background = '#5A8A3C';
-  } else if (slot.state === 'burnt') {
-    progEl.style.width = '100%';
-    progEl.style.background = '#1A0A00';
-  } else {
-    progEl.style.width = '0%';
+  ctx.setTransform(scale, 0, 0, scale, 0, 0); ctx.imageSmoothingEnabled = false;
+  room.draw(state, scale, canvas);
+  zones = []; const render = { ctx, art, state, zones };
+  renderers[state.view](render); drawHighlights(render, canDrop); drawHoverTag(render);
+  if (!uiPressed && state.now - lastHUD > 150) { renderHUD(state, art); lastHUD = state.now; }
+  requestAnimationFrame(frame);
+}
+export async function initGame(app) {
+  app.innerHTML = '<div class="loading">Opening Silog Kitchen…</div>';
+  art = new SpriteLoader();
+  try { await art.load(); } catch (error) { app.innerHTML = ''; const message = document.createElement('p'); message.className = 'loading'; message.textContent = `${error.message} Please supply the original sprite file.`; app.append(message); throw error; }
+  state = createState(); sound = new Audio(); buildUI(app);
+  canvas = document.querySelector('#scene'); ctx = canvas.getContext('2d'); fitCanvas();
+  room = new RoomRenderer(document.querySelector('#surroundings'), document.querySelector('.stage'), art);
+  attachInput({ canvas, state, hit, activate, drop, canDrag, onHover, ghost: createGhost(), ticketAt(x, y) {
+    const ticket = document.elementFromPoint(x, y)?.closest('[data-ticket]');
+    return ticket ? { kind: 'ticket', id: ticket.dataset.ticket } : null;
+  } });
+  new ResizeObserver(fitCanvas).observe(document.querySelector('.stage'));
+  const hudTooltip = document.querySelector('#hud-tooltip');
+  function showHUDTag(event) {
+    const target = event.target.closest('[data-tooltip]');
+    if (!target) { hudTooltip.classList.remove('visible'); return; }
+    hudTooltip.textContent = target.dataset.tooltip;
+    hudTooltip.classList.add('visible');
+    const box = target.getBoundingClientRect(), tip = hudTooltip.getBoundingClientRect();
+    hudTooltip.style.left = `${Math.max(6, Math.min(innerWidth - tip.width - 6, box.left + box.width / 2 - tip.width / 2))}px`;
+    hudTooltip.style.top = `${Math.max(6, box.top - tip.height - 6)}px`;
   }
-}
-
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-function setMessage(msg) {
-  state.message = msg;
-  // update message bar without full re-render to avoid flicker
-  const bar = document.getElementById('message-bar');
-  if (bar) bar.textContent = msg;
-}
-
-function bindInstructions() {
-  document.getElementById('close-instructions').addEventListener('click', () => {
-    document.getElementById('instructions').style.display = 'none';
-    document.getElementById('instructions-backdrop').style.display = 'none';
+  app.addEventListener('pointermove', showHUDTag);
+  app.addEventListener('focusin', showHUDTag);
+  app.addEventListener('pointerleave', () => hudTooltip.classList.remove('visible'));
+  app.addEventListener('focusout', () => hudTooltip.classList.remove('visible'));
+  // A HUD refresh must not replace a button between touch-down and its click.
+  app.addEventListener('pointerdown', event => { if (event.target.closest('button')) uiPressed = true; }, true);
+  const releaseUI = () => { setTimeout(() => { uiPressed = false; }, 0); };
+  document.addEventListener('pointerup', releaseUI, true);
+  document.addEventListener('pointercancel', releaseUI, true);
+  // Handle touch button releases directly. Chrome can suppress its synthesized
+  // click immediately after a canvas drag; keyboard and mouse still use click.
+  app.addEventListener('pointerup', event => {
+    if (event.pointerType !== 'touch' || !event.isPrimary) return;
+    const button = event.target.closest('button');
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) button.click();
   });
-  document.getElementById('instructions-backdrop').addEventListener('click', () => {
-    document.getElementById('instructions').style.display = 'none';
-    document.getElementById('instructions-backdrop').style.display = 'none';
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      if (state.ended) { event.preventDefault(); return; }
+      state.selected = null; navigate('kitchen');
+    }
+    if (state.view === 'stove' && /^[1-4]$/.test(event.key) && !state.ended) {
+      event.preventDefault(); activate({ kind: 'burner', index: Number(event.key) - 1 });
+    }
   });
+  document.querySelector('#summary').addEventListener('cancel', event => event.preventDefault());
+  app.addEventListener('click', event => {
+    if (event.pointerType === 'touch') return;
+    const button = event.target.closest('button'); if (!button) return;
+    if (button.id === 'next-day') {
+      document.querySelector('#summary').close();
+      // Keep the state identity used by Pointer Events, reset its contents.
+      const fresh = createState(Date.now(), state.day + 1, state.coins);
+      fresh.sound = state.sound; fresh.hints = state.hints; fresh.tutorial = 6;
+      Object.assign(state, fresh); changeView('kitchen'); return;
+    }
+    if (button.id === 'sound') {
+      state.sound = sound.toggle(); button.dataset.tooltip = state.sound ? 'Sound on' : 'Sound off'; button.setAttribute('aria-pressed', String(state.sound)); return;
+    }
+    if (state.ended) return;
+    if (button.dataset.view) navigate(button.dataset.view);
+    if (button.dataset.pick) pick(button.dataset.pick);
+    if (button.dataset.basket) {
+      if (state.view === 'fridge') { removeIngredient(state.basket, button.dataset.basket); tip('Ingredient returned to the shelf.'); }
+      else activate({ kind: 'basket', id: button.dataset.basket });
+    }
+    if (button.dataset.burner !== undefined) activate({ kind: 'burner', index: Number(button.dataset.burner) });
+    if (button.dataset.flip !== undefined) flip(Number(button.dataset.flip));
+    if (button.dataset.ticket) activate({ kind: 'ticket', id: button.dataset.ticket });
+    if (button.dataset.action) {
+      if (button.dataset.action === 'sink') sink();
+      else activate({ kind: button.dataset.action });
+    }
+    if (button.id === 'serve-btn') servePlate();
+    if (button.id === 'hints') { state.hints = !state.hints; button.dataset.tooltip = `Hints ${state.hints ? 'on' : 'off'}`; button.setAttribute('aria-pressed', String(state.hints)); }
+    if (button.id === 'debug') { state.debug = !state.debug; button.setAttribute('aria-pressed', String(state.debug)); }
+    lastHUD = 0;
+  });
+  requestAnimationFrame(frame);
 }

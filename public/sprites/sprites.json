@@ -1,0 +1,418 @@
+[
+ {
+  "file": "fridge-open.png",
+  "frameWidth": 40,
+  "frameHeight": 46,
+  "frames": 4,
+  "fps": 10,
+  "group": "A stations"
+ },
+ {
+  "file": "sink-highlight.png",
+  "frameWidth": 15,
+  "frameHeight": 12,
+  "frames": 1,
+  "fps": 0,
+  "group": "A stations"
+ },
+ {
+  "file": "basket.png",
+  "frameWidth": 16,
+  "frameHeight": 10,
+  "frames": 1,
+  "fps": 0,
+  "group": "A stations"
+ },
+ {
+  "file": "trash-bin.png",
+  "frameWidth": 10,
+  "frameHeight": 14,
+  "frames": 2,
+  "fps": 0,
+  "group": "A stations"
+ },
+ {
+  "file": "burner-flame.png",
+  "frameWidth": 12,
+  "frameHeight": 5,
+  "frames": 3,
+  "fps": 8,
+  "group": "A stations"
+ },
+ {
+  "file": "stove-zoom.png",
+  "frameWidth": 160,
+  "frameHeight": 100,
+  "frames": 1,
+  "fps": 0,
+  "group": "B zoom views"
+ },
+ {
+  "file": "fridge-interior.png",
+  "frameWidth": 160,
+  "frameHeight": 100,
+  "frames": 1,
+  "fps": 0,
+  "group": "B zoom views"
+ },
+ {
+  "file": "pan.png",
+  "frameWidth": 22,
+  "frameHeight": 10,
+  "frames": 1,
+  "fps": 0,
+  "group": "C cookware"
+ },
+ {
+  "file": "pan-zoom.png",
+  "frameWidth": 44,
+  "frameHeight": 20,
+  "frames": 1,
+  "fps": 0,
+  "group": "C cookware"
+ },
+ {
+  "file": "wok.png",
+  "frameWidth": 22,
+  "frameHeight": 11,
+  "frames": 1,
+  "fps": 0,
+  "group": "C cookware"
+ },
+ {
+  "file": "wok-zoom.png",
+  "frameWidth": 44,
+  "frameHeight": 22,
+  "frames": 1,
+  "fps": 0,
+  "group": "C cookware"
+ },
+ {
+  "file": "plate.png",
+  "frameWidth": 20,
+  "frameHeight": 9,
+  "frames": 1,
+  "fps": 0,
+  "group": "C cookware"
+ },
+ {
+  "file": "plate-zoom.png",
+  "frameWidth": 36,
+  "frameHeight": 16,
+  "frames": 1,
+  "fps": 0,
+  "group": "C cookware"
+ },
+ {
+  "file": "ing-egg.png",
+  "frameWidth": 12,
+  "frameHeight": 12,
+  "frames": 2,
+  "fps": 0,
+  "group": "D ingredients"
+ },
+ {
+  "file": "ing-tapa.png",
+  "frameWidth": 12,
+  "frameHeight": 12,
+  "frames": 2,
+  "fps": 0,
+  "group": "D ingredients"
+ },
+ {
+  "file": "ing-tocino.png",
+  "frameWidth": 12,
+  "frameHeight": 12,
+  "frames": 2,
+  "fps": 0,
+  "group": "D ingredients"
+ },
+ {
+  "file": "ing-longganisa.png",
+  "frameWidth": 12,
+  "frameHeight": 12,
+  "frames": 2,
+  "fps": 0,
+  "group": "D ingredients"
+ },
+ {
+  "file": "ing-rice.png",
+  "frameWidth": 12,
+  "frameHeight": 12,
+  "frames": 2,
+  "fps": 0,
+  "group": "D ingredients"
+ },
+ {
+  "file": "ing-garlic.png",
+  "frameWidth": 12,
+  "frameHeight": 12,
+  "frames": 2,
+  "fps": 0,
+  "group": "D ingredients"
+ },
+ {
+  "file": "cook-egg.png",
+  "frameWidth": 14,
+  "frameHeight": 8,
+  "frames": 5,
+  "fps": 0,
+  "group": "E cooking stages"
+ },
+ {
+  "file": "cook-egg-zoom.png",
+  "frameWidth": 28,
+  "frameHeight": 16,
+  "frames": 5,
+  "fps": 0,
+  "group": "E cooking stages"
+ },
+ {
+  "file": "cook-tapa.png",
+  "frameWidth": 14,
+  "frameHeight": 8,
+  "frames": 5,
+  "fps": 0,
+  "group": "E cooking stages"
+ },
+ {
+  "file": "cook-tapa-zoom.png",
+  "frameWidth": 28,
+  "frameHeight": 16,
+  "frames": 5,
+  "fps": 0,
+  "group": "E cooking stages"
+ },
+ {
+  "file": "cook-tocino.png",
+  "frameWidth": 14,
+  "frameHeight": 8,
+  "frames": 5,
+  "fps": 0,
+  "group": "E cooking stages"
+ },
+ {
+  "file": "cook-tocino-zoom.png",
+  "frameWidth": 28,
+  "frameHeight": 16,
+  "frames": 5,
+  "fps": 0,
+  "group": "E cooking stages"
+ },
+ {
+  "file": "cook-longganisa.png",
+  "frameWidth": 14,
+  "frameHeight": 8,
+  "frames": 5,
+  "fps": 0,
+  "group": "E cooking stages"
+ },
+ {
+  "file": "cook-longganisa-zoom.png",
+  "frameWidth": 28,
+  "frameHeight": 16,
+  "frames": 5,
+  "fps": 0,
+  "group": "E cooking stages"
+ },
+ {
+  "file": "cook-rice.png",
+  "frameWidth": 14,
+  "frameHeight": 8,
+  "frames": 5,
+  "fps": 0,
+  "group": "E cooking stages"
+ },
+ {
+  "file": "cook-rice-zoom.png",
+  "frameWidth": 28,
+  "frameHeight": 16,
+  "frames": 5,
+  "fps": 0,
+  "group": "E cooking stages"
+ },
+ {
+  "file": "plated-rice.png",
+  "frameWidth": 9,
+  "frameHeight": 6,
+  "frames": 2,
+  "fps": 0,
+  "group": "F plated food"
+ },
+ {
+  "file": "plated-rice-zoom.png",
+  "frameWidth": 18,
+  "frameHeight": 12,
+  "frames": 2,
+  "fps": 0,
+  "group": "F plated food"
+ },
+ {
+  "file": "plated-egg.png",
+  "frameWidth": 8,
+  "frameHeight": 5,
+  "frames": 2,
+  "fps": 0,
+  "group": "F plated food"
+ },
+ {
+  "file": "plated-egg-zoom.png",
+  "frameWidth": 16,
+  "frameHeight": 10,
+  "frames": 2,
+  "fps": 0,
+  "group": "F plated food"
+ },
+ {
+  "file": "plated-tapa.png",
+  "frameWidth": 8,
+  "frameHeight": 4,
+  "frames": 2,
+  "fps": 0,
+  "group": "F plated food"
+ },
+ {
+  "file": "plated-tapa-zoom.png",
+  "frameWidth": 16,
+  "frameHeight": 8,
+  "frames": 2,
+  "fps": 0,
+  "group": "F plated food"
+ },
+ {
+  "file": "plated-tocino.png",
+  "frameWidth": 8,
+  "frameHeight": 4,
+  "frames": 2,
+  "fps": 0,
+  "group": "F plated food"
+ },
+ {
+  "file": "plated-tocino-zoom.png",
+  "frameWidth": 16,
+  "frameHeight": 8,
+  "frames": 2,
+  "fps": 0,
+  "group": "F plated food"
+ },
+ {
+  "file": "plated-longganisa.png",
+  "frameWidth": 8,
+  "frameHeight": 4,
+  "frames": 2,
+  "fps": 0,
+  "group": "F plated food"
+ },
+ {
+  "file": "plated-longganisa-zoom.png",
+  "frameWidth": 16,
+  "frameHeight": 8,
+  "frames": 2,
+  "fps": 0,
+  "group": "F plated food"
+ },
+ {
+  "file": "fx-steam.png",
+  "frameWidth": 8,
+  "frameHeight": 10,
+  "frames": 4,
+  "fps": 6,
+  "group": "G effects"
+ },
+ {
+  "file": "fx-smoke-light.png",
+  "frameWidth": 8,
+  "frameHeight": 10,
+  "frames": 4,
+  "fps": 6,
+  "group": "G effects"
+ },
+ {
+  "file": "fx-smoke-heavy.png",
+  "frameWidth": 12,
+  "frameHeight": 14,
+  "frames": 4,
+  "fps": 8,
+  "group": "G effects"
+ },
+ {
+  "file": "fx-sparkle.png",
+  "frameWidth": 9,
+  "frameHeight": 9,
+  "frames": 4,
+  "fps": 10,
+  "group": "G effects"
+ },
+ {
+  "file": "fx-coin-pop.png",
+  "frameWidth": 8,
+  "frameHeight": 8,
+  "frames": 4,
+  "fps": 12,
+  "group": "G effects"
+ },
+ {
+  "file": "ui-gauge.png",
+  "frameWidth": 12,
+  "frameHeight": 12,
+  "frames": 1,
+  "fps": 0,
+  "group": "G ui"
+ },
+ {
+  "file": "ui-flip.png",
+  "frameWidth": 9,
+  "frameHeight": 9,
+  "frames": 2,
+  "fps": 4,
+  "group": "G ui"
+ },
+ {
+  "file": "ui-warning.png",
+  "frameWidth": 7,
+  "frameHeight": 9,
+  "frames": 2,
+  "fps": 3,
+  "group": "G ui"
+ },
+ {
+  "file": "ui-close.png",
+  "frameWidth": 9,
+  "frameHeight": 9,
+  "frames": 2,
+  "fps": 0,
+  "group": "G ui"
+ },
+ {
+  "file": "ui-ticket.png",
+  "frameWidth": 24,
+  "frameHeight": 32,
+  "frames": 1,
+  "fps": 0,
+  "group": "G ui"
+ },
+ {
+  "file": "ui-mood.png",
+  "frameWidth": 8,
+  "frameHeight": 8,
+  "frames": 3,
+  "fps": 0,
+  "group": "G ui"
+ },
+ {
+  "file": "ui-star.png",
+  "frameWidth": 9,
+  "frameHeight": 9,
+  "frames": 2,
+  "fps": 0,
+  "group": "G ui"
+ },
+ {
+  "file": "ui-coin.png",
+  "frameWidth": 8,
+  "frameHeight": 8,
+  "frames": 1,
+  "fps": 0,
+  "group": "G ui"
+ }
+]
